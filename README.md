@@ -76,3 +76,21 @@ Create and activate a virtual environment:
 python3 -m venv .venv
 source .venv/bin/activate
 ```
+
+Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+SWAGGER UI visit:
+
+```bash
+http://localhost:8000/docs
+```
