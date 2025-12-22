@@ -1,7 +1,32 @@
-.venv
+# Python
 __pycache__
 *.pyc
-.env
-.git
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Git
+.git/
 .gitignore
+
+# Environment files
+.env
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Tests & docs 
+tests/
+docs/
+
+# Docker artifacts
+Dockerfile
+docker-compose.yml
+
+# README
 README.md
