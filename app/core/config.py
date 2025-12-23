@@ -1,10 +1,19 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
+    # Application
     app_name: str = "TenantCore"
     environment: str = "development"
     debug: bool = True
+
+    # Database
+    db_host: str = Field(default="localhost")
+    db_port: int = Field(default=5432)
+    db_name: str = Field(default="tenantcore")
+    db_user: str = Field(default="tenantcore")
+    db_password: str = Field(default="tenantcore")
 
     class Config:
         env_file = ".env"
