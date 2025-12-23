@@ -1,9 +1,14 @@
-from app.core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
+from app.core.database import engine
+
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 
-def get_database_url() -> str:
-    return (
-        f"postgresql+asyncpg://"
-        f"{settings.db_user}:{settings.db_password}"
-        f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
-    )
+async def get_db_session():
+    async with AsyncSessionLocal() as session:
+        yield session

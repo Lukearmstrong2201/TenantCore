@@ -7,7 +7,6 @@ from app.core.lifespan import lifespan
 from app.db.connection_test import test_db_connection
 
 
-
 setup_logging()
 
 logger = logging.getLogger(__name__)

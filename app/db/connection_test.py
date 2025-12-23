@@ -1,7 +1,11 @@
-import asyncpg
-from app.db.session import get_database_url
+from sqlalchemy import text
+from app.core.database import engine
 
 
 async def test_db_connection():
-    conn = await asyncpg.connect(get_database_url())
-    await conn.close()
+    if engine is None:
+        raise RuntimeError("Database engine not initialized")
+    
+
+    async with engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))

@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     db_user: str = Field(default="tenantcore")
     db_password: str = Field(default="tenantcore")
 
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.db_user}:{self.db_password}"
+            f"@{self.db_host}:{self.db_port}/{self.db_name}"
+        )
     class Config:
         env_file = ".env"
 
