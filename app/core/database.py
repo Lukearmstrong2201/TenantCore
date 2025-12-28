@@ -23,5 +23,8 @@ async def close_engine() -> None:
 
 
 async def create_tables() -> None:
+    if engine is None:
+        raise RuntimeError("Engine not initialised")
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
