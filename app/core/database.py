@@ -1,5 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from app.core.config import settings
+from sqlalchemy import text
+from app.db.base import Base
+
 
 engine: AsyncEngine | None = None
 
@@ -18,3 +21,8 @@ async def close_engine() -> None:
     if engine:
         await engine.dispose()
         engine = None
+
+
+async def create_tables() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
