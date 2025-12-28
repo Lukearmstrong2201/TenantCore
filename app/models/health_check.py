@@ -7,4 +7,4 @@ class HealthCheck(Base):
     __tablename__ = "health_check"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    status: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
