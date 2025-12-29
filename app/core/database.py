@@ -40,15 +40,3 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
     async with SessionLocal() as session:
         yield session
-
-
-async def create_tables() -> None:
-    """
-    Temporary helper.
-    Will be removed once Alembic is introduced.
-    """
-    if engine is None:
-        raise RuntimeError("Engine not initialised")
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)

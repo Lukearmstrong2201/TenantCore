@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.core.database import init_engine, close_engine, create_tables
+from app.core.database import init_engine, close_engine
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +13,6 @@ async def lifespan(app: FastAPI):
     # Startup
     init_engine()
     logger.info("Database engine initialized")
-
-    await create_tables()
-    """
-    TEMPORARY
-    Will be replaced by Alembic migrations.
-    """
-    logger.info("Database tables created")
 
     yield
 
