@@ -15,6 +15,10 @@ async def lifespan(app: FastAPI):
     logger.info("Database engine initialized")
 
     await create_tables()
+    """
+    TEMPORARY
+    Will be replaced by Alembic migrations.
+    """
     logger.info("Database tables created")
 
     yield
