@@ -49,26 +49,42 @@ TenantCore acts as the foundation for that kind of system.
 
 ## Project status
 
-**In active development**
+### Current phase: **v1 — Foundation**
 
-Currently implemented:
+v1 focuses on building a correct, production-grade backend foundation before adding higher-level features.
 
-- Basic FastAPI application
-- Health check endpoint
-- Git + SSH authentication setup
+### Implemented
 
-Planned next steps:
+- FastAPI application structure
+- Versioned API routing (`/api/v1`)
+- Health check endpoints
+- PostgreSQL integration
+- SQLAlchemy models
+- Alembic migration setup
+- Initial database schema migration
+- Database engine lifecycle management
+- Tenant domain model
 
-- Clean project structure
-- Environment variable management
+### In progress (v1)
+
+- Tenant CRUD endpoints
+- Pydantic request/response schemas
+- Repository and service layers
+- Dependency injection for DB sessions
+- Basic API tests
+
+### Planned (v2+)
+
+- Authentication (JWT)
+- User management
+- Multi-tenant data isolation
+- Role-based access control
 - Dockerisation
-- Database integration
-- Authentication
-- Multi-tenant support
+- Deployment workflows
 
 ---
 
-## Running locally (for now)
+## Running locally
 
 Create and activate a virtual environment:
 
