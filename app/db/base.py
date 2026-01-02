@@ -1,5 +1,6 @@
-from sqlalchemy.orm import DeclarativeBase
+from app.db.base_class import Base
 
-
-class Base(DeclarativeBase):
-    pass
+# Import all models so Alembic can see them
+from app.models.health_check import HealthCheck
+from app.models.tenant import Tenant
+from app.models.project import Project
