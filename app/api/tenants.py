@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 
 from app.schemas.tenant import TenantCreate, TenantRead
-from app.repositories.tenant import get_all_tenants
+from app.core.tenant_context import get_current_tenant
 from app.models.tenant import Tenant
 from app.db.session import get_db
 
@@ -49,13 +49,16 @@ def create_tenant(
     response_model=List[TenantRead],
 )
 def list_tenants(
+    current_tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
     """
     Return all tenants.
+    Tenant context enforced.
     """
 
-    return get_all_tenants(db)
+    tenants = db.query(Tenant).order_by(Tenant.id).all()
+    return tenants
 
 
 
