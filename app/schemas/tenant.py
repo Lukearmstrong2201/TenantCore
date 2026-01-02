@@ -1,13 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class TenantCreate(BaseModel):
-    name: str
+class TenantBase(BaseModel):
+    """
+    Shared tenant fields.
+    """
+    name: str = Field(..., max_length=255)
 
 
-class TenantRead(BaseModel):
+class TenantCreate(TenantBase):
+    """
+    Schema used when creating a tenant
+    """
+    pass
+
+
+class TenantRead(TenantBase):
+    """
+    Schema used when returning a tenant from the API
+    """
     id: int
-    name: str
 
     class Config:
-        from_attributes = True
+        from_attributes = True  # Pydantic (ORM)
