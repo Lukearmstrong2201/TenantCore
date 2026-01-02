@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 from app.models.tenant import Tenant
 from app.schemas.tenant import TenantCreate
@@ -73,3 +74,11 @@ def list_tenants(db: Session) -> list[Tenant]:
     """
     
     return db.query(Tenant).order_by(Tenant.name).all()
+
+
+def get_all_tenants(db: Session) -> list[Tenant]:
+    """
+    Fetch all tenants from the database.
+    """
+    result = db.execute(select(Tenant))
+    return result.scalars().all()

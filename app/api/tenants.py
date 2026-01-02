@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from typing import List
 
 from app.schemas.tenant import TenantCreate, TenantRead
+from app.repositories.tenant import get_all_tenants
 from app.models.tenant import Tenant
 from app.db.session import get_db
 
@@ -18,16 +21,44 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 def create_tenant(
-    tenant: TenantCreate,
+    tenant_in: TenantCreate,
     db: Session = Depends(get_db),
 ):
     """
     Create a tenant and persist it to the database.
     """
-    db_tenant = Tenant(name=tenant.name)
+    tenant = Tenant(name=tenant_in.name)
 
-    db.add(db_tenant)
-    db.commit()
-    db.refresh(db_tenant)
+    db.add(tenant)
 
-    return db_tenant
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Tenant with this name already exists",
+        )
+    
+    db.refresh(tenant)
+    return tenant
+
+
+@router.get(
+    "",
+    response_model=List[TenantRead],
+)
+def list_tenants(
+    db: Session = Depends(get_db),
+):
+    """
+    Return all tenants.
+    """
+
+    return get_all_tenants(db)
+
+
+
+
+
+
