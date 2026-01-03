@@ -3,6 +3,7 @@ from sqlalchemy.orm import declared_attr
 
 
 class TenantScopedMixin:
+    __abstract__ = True
     """
     Mixin that adds tenant ownership to a model.
     """
@@ -15,3 +16,6 @@ class TenantScopedMixin:
             nullable=False,
             index=True,
         )
+    
+            
+        
