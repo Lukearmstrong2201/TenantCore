@@ -3,6 +3,19 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def get_user_by_id(
+    db: AsyncSession,
+    user_id: int,
+) -> User | None:
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+
 
 def get_by_email(
     db: Session,
