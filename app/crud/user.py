@@ -1,10 +1,11 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.schemas.user import UserCreate
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.security import hash_password
 
 
 async def get_user_by_id(
@@ -17,38 +18,40 @@ async def get_user_by_id(
     return result.scalar_one_or_none()
 
 
-def get_by_email(
-    db: Session,
-    *,
+async def get_user_by_email(
+    db: AsyncSession,
     email: str,
-    tenant_id: int,
 ) -> User | None:
-    return (
-        db.query(User)
-        .filter(
-            User.email == email,
-            User.tenant_id == tenant_id,
-        )
-        .first()
+    result = await db.execute(
+        select(User).where(User.email == email)
     )
+    return result.scalar_one_or_none()
 
 
-def create(
-    db: Session,
-    *,
+async def create_user(
+    db: AsyncSession,
     user_in: UserCreate,
-    tenant_id: int,
 ) -> User:
     db_user = User(
         email=user_in.email,
         is_active=user_in.is_active,
         is_admin=user_in.is_admin,
-        tenant_id=tenant_id,
-        hashed_password=user_in.password,
+        hashed_password=hash_password(user_in.password),
+        tenant_id=user_in.tenant_id,
     )
 
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
 
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        )
+    
+    
+    await db.refresh(db_user)
     return db_user
+

@@ -8,7 +8,9 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    email: EmailStr
     password: str
+    tenant_id: int
 
 
 class UserRead(UserBase):
