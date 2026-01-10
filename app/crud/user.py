@@ -36,7 +36,7 @@ async def create_user(
     db_user = User(
         email=user_in.email,
         is_active=user_in.is_active,
-        is_admin=user_in.is_admin,
+        is_admin=False,
         hashed_password=hash_password(user_in.password),
         tenant_id=tenant_id
     )
