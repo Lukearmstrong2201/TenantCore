@@ -9,12 +9,27 @@ from app.schemas.user import UserRead, UserCreate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.get("/whoami")
+async def who_am_i(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Debug endpoint to verify resolved user + tenant context.
+    """
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "tenant_id": current_user.tenant_id,
+        "is_admin": current_user.is_admin,
+    }
+
 
 @router.get("/me", response_model=UserRead)
 async def read_current_user(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
 
 # Temporary for testing
 @router.post("/", response_model=UserRead)
