@@ -38,7 +38,7 @@ async def read_current_user(
 
 @router.get("/", response_model=list[UserRead])
 async def read_users_in_tenant(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
