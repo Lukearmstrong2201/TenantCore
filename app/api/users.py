@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.api.deps import get_current_user
 from app.crud.user import create_user
+from app.crud.user import get_users_by_tenant
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -28,8 +29,24 @@ async def who_am_i(
 async def read_current_user(
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Get tennant currently logged in.
+    """
     return current_user
 
+
+@router.get("/", response_model=list[UserRead])
+async def read_users_in_tenant(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get users belonging to the tenant.
+    """
+    return await get_users_by_tenant(
+        db,
+        tenant_id=current_user.tenant_id,
+    )
 
 # Temporary for testing
 @router.post("/", response_model=UserRead)

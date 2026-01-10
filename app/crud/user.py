@@ -55,3 +55,14 @@ async def create_user(
     await db.refresh(db_user)
     return db_user
 
+
+async def get_users_by_tenant(
+    db: AsyncSession,
+    tenant_id: int,
+) -> list[User]:
+    result = await db.execute(
+        select(User).where(User.tenant_id == tenant_id)
+    )
+    return result.scalars().all()
+
+
