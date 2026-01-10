@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -6,6 +6,7 @@ from app.api.deps import get_current_user
 from app.api.deps import require_admin
 from app.crud.user import create_user
 from app.crud.user import get_users_by_tenant
+from app.crud.user import promote_user_to_admin
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -57,4 +58,27 @@ async def create_user_endpoint(
     current_user: User = Depends(require_admin),
 ):
     return await create_user(db, user_in,tenant_id=current_user.tenant_id,)
+
+
+@router.post("/{user_id}/promote", response_model=UserRead)
+async def promote_user(
+    user_id: int,
+    current_admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Promote a user to admin within the same tenant.
+    """
+    if current_admin.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot promote yourself",
+        )
+
+    return await promote_user_to_admin(
+        db,
+        user_id=user_id,
+        tenant_id=current_admin.tenant_id,
+    )
+
 

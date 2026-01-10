@@ -67,3 +67,37 @@ async def get_users_by_tenant(
     return result.scalars().all()
 
 
+async def promote_user_to_admin(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    tenant_id: int,
+) -> User:
+    """
+    Promote a user to admin within the same tenant.
+    """
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.tenant_id == tenant_id,
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found in tenant",
+        )
+
+    if user.is_admin:
+        return user
+
+    user.is_admin = True
+    await db.commit()
+    await db.refresh(user)
+
+    return user
+
+
+
