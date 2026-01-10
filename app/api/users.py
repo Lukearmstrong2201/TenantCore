@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.api.deps import get_current_user
+from app.api.deps import require_admin
 from app.crud.user import create_user
 from app.crud.user import get_users_by_tenant
 from app.models.user import User
@@ -53,6 +54,7 @@ async def read_users_in_tenant(
 async def create_user_endpoint(
     user_in: UserCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
 ):
-    return await create_user(db, user_in)
+    return await create_user(db, user_in,tenant_id=current_user.tenant_id,)
 

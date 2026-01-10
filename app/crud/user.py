@@ -31,13 +31,14 @@ async def get_user_by_email(
 async def create_user(
     db: AsyncSession,
     user_in: UserCreate,
+    tenant_id: int,
 ) -> User:
     db_user = User(
         email=user_in.email,
         is_active=user_in.is_active,
         is_admin=user_in.is_admin,
         hashed_password=hash_password(user_in.password),
-        tenant_id=user_in.tenant_id,
+        tenant_id=tenant_id
     )
 
     db.add(db_user)
