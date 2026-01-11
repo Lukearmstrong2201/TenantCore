@@ -100,4 +100,34 @@ async def promote_user_to_admin(
     return user
 
 
+async def demote_admin_user(
+    db: AsyncSession,
+    user_id: int,
+    tenant_id: int,
+) -> User:
+    """
+    Demote an admin user back to a regular user within the same tenant.
+    """
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.tenant_id == tenant_id,
+            User.is_admin.is_(True),
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Admin user not found in tenant",
+        )
+
+    user.is_admin = False
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+
 

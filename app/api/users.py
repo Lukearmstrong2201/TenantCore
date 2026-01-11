@@ -7,6 +7,7 @@ from app.api.deps import require_admin
 from app.crud.user import create_user
 from app.crud.user import get_users_by_tenant
 from app.crud.user import promote_user_to_admin
+from app.crud.user import demote_admin_user
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -80,5 +81,31 @@ async def promote_user(
         user_id=user_id,
         tenant_id=current_admin.tenant_id,
     )
+
+
+@router.patch("/{user_id}/demote", response_model=UserRead)
+async def demote_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Demote an admin user to a regular user in the same tenant.
+    Can only be performed by an admin.
+    """
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot demote yourself.",
+        )
+
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You need admin rights to perform this action.",
+        )
+
+    demoted_user = await demote_admin_user(db, user_id, current_user.tenant_id)
+    return demoted_user
 
 
