@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select,func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
@@ -103,30 +103,56 @@ async def promote_user_to_admin(
 async def demote_admin_user(
     db: AsyncSession,
     user_id: int,
+    current_user_id: int,
     tenant_id: int,
 ) -> User:
-    """
-    Demote an admin user back to a regular user within the same tenant.
-    """
-    result = await db.execute(
-        select(User).where(
-            User.id == user_id,
-            User.tenant_id == tenant_id,
-            User.is_admin.is_(True),
+    # Block self-demotion
+    if user_id == current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot demote yourself.",
         )
-    )
-    user = result.scalar_one_or_none()
 
+    # Block last-admin demotion
+    admin_count = await count_admins_in_tenant(db, tenant_id)
+    if admin_count <= 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove the last admin in the tenant.",
+        )
+
+    user = await get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Admin user not found in tenant",
+            detail="User not found.",
+        )
+
+    if user.is_admin == False:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already not an admin.",
         )
 
     user.is_admin = False
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def count_admins_in_tenant(
+    db: AsyncSession,
+    tenant_id: int,
+) -> int:
+    result = await db.execute(
+        select(func.count())
+        .select_from(User)
+        .where(
+            User.tenant_id == tenant_id,
+            User.is_admin == True,
+        )
+    )
+    return result.scalar_one()
 
 
 

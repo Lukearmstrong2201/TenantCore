@@ -86,26 +86,29 @@ async def promote_user(
 @router.patch("/{user_id}/demote", response_model=UserRead)
 async def demote_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Demote an admin user to a regular user in the same tenant.
     Can only be performed by an admin.
     """
+    # Block self-demotion
     if current_user.id == user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot demote yourself.",
         )
-
+    
+    # Ensure the current user is an admin
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You need admin rights to perform this action.",
         )
-
-    demoted_user = await demote_admin_user(db, user_id, current_user.tenant_id)
+    
+     # Call the demote_admin_user function with all required arguments
+    demoted_user = await demote_admin_user(db, user_id, current_user.id, current_user.tenant_id)
     return demoted_user
 
 
