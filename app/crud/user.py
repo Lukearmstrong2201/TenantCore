@@ -155,5 +155,66 @@ async def count_admins_in_tenant(
     return result.scalar_one()
 
 
+async def deactivate_user(
+    db: AsyncSession,
+    user_id: int,
+    current_user_id: int,
+    tenant_id: int,
+) -> User:
+    if user_id == current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot deactivate yourself.",
+        )
 
+    user = await get_user_by_id(db, user_id)
+    if not user or user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already inactive.",
+        )
+
+    # Prevent last-admin lockout
+    if user.is_admin:
+        admin_count = await count_admins_in_tenant(db, tenant_id)
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot deactivate the last admin in the tenant.",
+            )
+
+    user.is_active = False
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def reactivate_user(
+    db: AsyncSession,
+    user_id: int,
+    tenant_id: int,
+) -> User:
+    user = await get_user_by_id(db, user_id)
+    if not user or user.tenant_id != tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    if user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already active.",
+        )
+
+    user.is_active = True
+    await db.commit()
+    await db.refresh(user)
+    return user
 

@@ -8,6 +8,7 @@ from app.crud.user import create_user
 from app.crud.user import get_users_by_tenant
 from app.crud.user import promote_user_to_admin
 from app.crud.user import demote_admin_user
+from app.crud.user import reactivate_user, deactivate_user
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -111,4 +112,36 @@ async def demote_user(
     demoted_user = await demote_admin_user(db, user_id, current_user.id, current_user.tenant_id)
     return demoted_user
 
+
+@router.patch("/{user_id}/deactivate", response_model=UserRead)
+async def deactivate_user_endpoint(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    """
+    Deactivate a user in the same tenant.
+    """
+    return await deactivate_user(
+        db=db,
+        user_id=user_id,
+        current_user_id=current_admin.id,
+        tenant_id=current_admin.tenant_id,
+    )
+
+
+@router.patch("/{user_id}/reactivate", response_model=UserRead)
+async def reactivate_user_endpoint(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    """
+    Reactivate a user in the same tenant.
+    """
+    return await reactivate_user(
+        db=db,
+        user_id=user_id,
+        tenant_id=current_admin.tenant_id,
+    )
 
