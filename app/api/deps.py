@@ -6,6 +6,7 @@ from jose import JWTError
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
+from app.models.tenant import Tenant
 from app.crud.user import get_user_by_id
 
 
@@ -52,3 +53,26 @@ async def require_admin(
         )
 
     return current_user
+
+
+async def get_current_tenant(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Tenant:
+    """
+    Resolve the tenant for the current authenticated user.
+    """
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not associated with a tenant",
+        )
+
+    tenant = await db.get(Tenant, current_user.tenant_id)
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found",
+        )
+
+    return tenant
