@@ -1,23 +1,45 @@
 from fastapi import Depends, Header, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from jose import JWTError
 
 from app.db.session import get_db
+from app.models.user import User
 from app.models.tenant import Tenant
+from app.core.security import decode_access_token
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-def get_current_tenant(
-    tenant_id: int = Header(..., alias="X-Tenant-ID"),
-    db: Session = Depends(get_db),
+async def get_current_tenant(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
 ) -> Tenant:
-    """
-    Resolve the current tenant from the X-Tenant-ID header.
+    try:
+        user_id = decode_access_token(token)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
 
-    This dependency:
-    - Enforces tenant presence on the request
-    - Ensures the tenant exists
-    - Provides the Tenant object to downstream handlers
-    """
-    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    # Load user
+    user_result = await db.execute(
+        select(User).where(User.id == int(user_id))
+    )
+    user = user_result.scalar_one_or_none()
+
+    if not user or not user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User has no tenant",
+        )
+
+    # Load tenant
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.id == user.tenant_id)
+    )
+    tenant = tenant_result.scalar_one_or_none()
 
     if not tenant:
         raise HTTPException(
