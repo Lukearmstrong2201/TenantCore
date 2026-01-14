@@ -9,6 +9,7 @@ from app.crud.user import get_users_by_tenant
 from app.crud.user import promote_user_to_admin
 from app.crud.user import demote_admin_user
 from app.crud.user import reactivate_user, deactivate_user
+from app.crud.audit_log import create_audit_log
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -77,11 +78,21 @@ async def promote_user(
             detail="You cannot promote yourself",
         )
 
-    return await promote_user_to_admin(
+    promoted_user = await promote_user_to_admin(
         db,
         user_id=user_id,
         tenant_id=current_admin.tenant_id,
     )
+
+    await create_audit_log(
+    db=db,
+    tenant_id=current_admin.tenant_id,
+    actor_user_id=current_admin.id,
+    target_user_id=promoted_user.id,
+    action="PROMOTE_ADMIN",
+)
+
+    return promoted_user
 
 
 @router.patch("/{user_id}/demote", response_model=UserRead)
@@ -109,7 +120,18 @@ async def demote_user(
         )
     
      # Call the demote_admin_user function with all required arguments
-    demoted_user = await demote_admin_user(db, user_id, current_user.id, current_user.tenant_id)
+    demoted_user = await demote_admin_user(
+        db, user_id, 
+        current_user.id, 
+        current_user.tenant_id)
+    
+    await create_audit_log(
+    db=db,
+    tenant_id=current_user.tenant_id,
+    actor_user_id=current_user.id,
+    target_user_id=demoted_user.id,
+    action="DEMOTE_ADMIN",
+)
     return demoted_user
 
 

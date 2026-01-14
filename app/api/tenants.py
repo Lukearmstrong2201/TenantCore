@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 from typing import List
 
 from app.schemas.tenant import TenantCreate, TenantRead
@@ -20,27 +21,26 @@ router = APIRouter(
     response_model=TenantRead,
     status_code=status.HTTP_201_CREATED,
 )
-def create_tenant(
+async def create_tenant(
     tenant_in: TenantCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a tenant and persist it to the database.
     """
     tenant = Tenant(name=tenant_in.name)
-
     db.add(tenant)
 
     try:
-        db.commit()
+        await db.commit()
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Tenant with this name already exists",
         )
     
-    db.refresh(tenant)
+    await db.refresh(tenant)
     return tenant
 
 
@@ -48,17 +48,19 @@ def create_tenant(
     "",
     response_model=List[TenantRead],
 )
-def list_tenants(
+async def list_tenants(
     current_tenant: Tenant = Depends(get_current_tenant),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Return all tenants.
     Tenant context enforced.
     """
 
-    tenants = db.query(Tenant).order_by(Tenant.id).all()
-    return tenants
+    result = await db.execute(
+        select(Tenant).order_by(Tenant.id)
+    )
+    return result.scalars().all()
 
 
 
