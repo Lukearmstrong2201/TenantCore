@@ -24,7 +24,7 @@ class ProjectRepository:
         )
 
         self.db.add(project)
-        await self.db.flush()
+        await self.db.commit()
         await self.db.refresh(project)
 
         return project
