@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.project import ProjectCreate, ProjectRead
-from app.repositories.project import create_project_for_tenant, get_projects_for_tenant
+from app.repositories.project import ProjectRepository
 from app.core.tenant_context import get_current_tenant
 from app.models.tenant import Tenant
 from app.db.session import get_db
@@ -27,11 +27,9 @@ async def create_project(
     """
     Create a project for the current tenant.
     """
-    return await create_project_for_tenant(
-        db=db,
-        tenant=tenant,
-        name=project_in.name,
-    )
+    repo = ProjectRepository(db=db, tenant=tenant)
+    return await repo.create(name=project_in.name)
+    
 
 
 @router.get(
@@ -46,7 +44,5 @@ async def list_projects(
     """
     List all projects for the current tenant.
     """
-    return await get_projects_for_tenant(
-        db=db,
-        tenant=tenant,
-    )
+    repo = ProjectRepository(db=db, tenant=tenant)
+    return await repo.list_all()

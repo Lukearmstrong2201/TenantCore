@@ -4,37 +4,38 @@ from sqlalchemy import select
 from app.models.project import Project
 from app.models.tenant import Tenant
 
+class ProjectRepository:
+    def __init__(
+        self,
+        *,
+        db: AsyncSession,
+        tenant: Tenant,
+    ):
+        self.db = db
+        self.tenant = tenant
 
-async def create_project_for_tenant(
-    *,
-    db: AsyncSession,
-    tenant: Tenant,
-    name: str,
-) -> Project:
-    """
-    Create a project scoped to a tenant.
-    """
-    project = Project(
-        name=name,
-        tenant_id=tenant.id,
-    )
+    async def create(self, *, name: str) -> Project:
+        """
+        Create a project scoped to the current tenant.
+        """
+        project = Project(
+            name=name,
+            tenant_id=self.tenant.id,
+        )
 
-    db.add(project)
-    await db.flush()
-    await db.refresh(project)
+        self.db.add(project)
+        await self.db.flush()
+        await self.db.refresh(project)
 
-    return project
+        return project
 
-
-async def get_projects_for_tenant(
-    *,
-    db: AsyncSession,
-    tenant: Tenant,
-) -> list[Project]:
-    """
-    Return all projects belonging to a tenant.
-    """
-    result = await db.execute(
-        select(Project).where(Project.tenant_id == tenant.id)
-    )
-    return result.scalars().all()
+    async def list_all(self) -> list[Project]:
+        """
+        Return all projects belonging to the current tenant.
+        """
+        result = await self.db.execute(
+            select(Project).where(
+                Project.tenant_id == self.tenant.id
+            )
+        )
+        return result.scalars().all()
