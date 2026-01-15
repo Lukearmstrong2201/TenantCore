@@ -1,20 +1,17 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models.tenant import Tenant
 from app.schemas.tenant import TenantCreate
 
-def create_tenant(db: Session, tenant_in: TenantCreate) -> Tenant:
+async def create_tenant(
+    *,
+    db: AsyncSession,
+    tenant_in: TenantCreate
+) -> Tenant:
     """
-    Create a new tenant record in the database.
-
-    This function:
-    - Accepts a SQLAlchemy DB session
-    - Accepts validated input data (TenantCreate schema)
-    - Translates schema -> SQLAlchemy model
-    - Persists it to Postgres
-    - Returns the created Tenant model
+    Create a new tenant record.
     """
     tenant = Tenant(
         name=tenant_in.name
@@ -23,62 +20,53 @@ def create_tenant(db: Session, tenant_in: TenantCreate) -> Tenant:
     db.add(tenant)
 
     try:
-        db.commit()
+        await db.commit()
     except IntegrityError:
         db.rollback()
         raise
 
-    db.refresh(tenant)
+    await db.refresh(tenant)
     return tenant
 
 
-def get_tenant_by_id(db: Session, tenant_id: int) -> Tenant | None:
+async def get_tenant_by_id(
+    *,
+    db: AsyncSession,
+    tenant_id: int
+) -> Tenant | None:
     """
     Fetch a tenant by its primary key.
-
-    Returns:
-    - Tenant if found
-    - None if no record exists
     """
     
-    return (
-        db.query(Tenant)
-        .filter(Tenant.id == tenant_id)
-        .first()
+    result = await db.execute(
+        select(Tenant).where(Tenant.id == tenant_id)
     )
+    return result.scalar_one_or_none()
 
 
-def get_tenant_by_name(db: Session, name: str) -> Tenant | None:
+async def get_tenant_by_name(
+    *,    
+    db: AsyncSession,
+    name: str
+) -> Tenant | None:
     """
     Fetch a tenant by its unique name.
-
-    Useful for:
-    - Duplicate checks
-    - Lookup by human-readable identifier
     """
     
-    return (
-        db.query(Tenant)
-        .filter(Tenant.name == name)
-        .first()
+    result = await db.execute(
+        select(Tenant).where(Tenant.name == name)
     )
+    return result.scalar_one_or_none()
 
 
-def list_tenants(db: Session) -> list[Tenant]:
+async def list_tenants(
+    *,
+    db: AsyncSession
+) -> list[Tenant]:
     """
     Return all tenants in the system.
-
-    Notes:
-    - Returns raw SQLAlchemy models
-    - Ordering is done at the DB level
     """
-    
-    return db.query(Tenant).order_by(Tenant.name).all()
-
-
-def get_all_tenants(db: Session) -> list[Tenant]:
-    """
-    Fetch all tenants from the database.
-    """
-    result = db.execute(select(Tenant))
-    return result.scalars().all()
+    result = await db.execute(
+        select(Tenant).order_by(Tenant.name)
+    )
+    return result.scalar_one_or_none()

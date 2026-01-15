@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.project import ProjectCreate, ProjectRead
-from app.repositories.project import create_project_for_tenant
 from app.repositories.project import create_project_for_tenant, get_projects_for_tenant
 from app.core.tenant_context import get_current_tenant
 from app.models.tenant import Tenant
