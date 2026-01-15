@@ -1,4 +1,4 @@
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Generic
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -7,7 +7,7 @@ from app.models.tenant import Tenant
 ModelType = TypeVar("ModelType")
 
 
-class TenantScopedRepository:
+class TenantScopedRepository(Generic[ModelType]):
     def __init__(
         self,
         *,
