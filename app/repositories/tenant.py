@@ -69,4 +69,4 @@ async def list_tenants(
     result = await db.execute(
         select(Tenant).order_by(Tenant.name)
     )
-    return result.scalar_one_or_none()
+    return result.scalar().all()
