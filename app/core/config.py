@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
+    # Bootstrap safety
+    allow_bootstrap: bool = False
+
     @property
     def database_url(self) -> str:
         return (
@@ -29,6 +32,7 @@ class Settings(BaseSettings):
         )
     class Config:
         env_file = ".env"
+        extra = "forbid"
 
 
 settings = Settings()
