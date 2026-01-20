@@ -11,7 +11,7 @@ from app.models.tenant import Tenant
 
 
 SYSTEM_TENANT_NAME = "System"
-ADMIN_EMAIL = "admin@example.com"
+ADMIN_EMAIL = "admin@example.com" #CHANGE AS REQUIRED
 ADMIN_PASSWORD = "ChangeMe123!"  # CHANGE IMMEDIATELY
 
 

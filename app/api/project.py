@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.project import ProjectCreate, ProjectRead
 from app.repositories.project import ProjectRepository
-from app.core.tenant_context import get_current_tenant
+from app.api.deps import get_current_tenant
 from app.models.tenant import Tenant
 from app.db.session import get_db
 

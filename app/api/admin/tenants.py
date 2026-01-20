@@ -16,6 +16,7 @@ router = APIRouter(
 @router.get(
     "",
     status_code=status.HTTP_200_OK,
+    operation_id="admin_list_tenants",
 )
 async def list_tenants(
     _: User = Depends(require_admin),
@@ -28,6 +29,7 @@ async def list_tenants(
 @router.get(
     "/{tenant_id}/health",
     status_code=status.HTTP_200_OK,
+    operation_id="admin_tenant_health",
 )
 async def tenant_health(
     tenant_id: int,

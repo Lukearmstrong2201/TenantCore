@@ -5,7 +5,7 @@ from sqlalchemy import select
 from typing import List
 
 from app.schemas.tenant import TenantCreate, TenantRead
-from app.core.tenant_context import get_current_tenant
+from app.api.deps import get_current_tenant
 from app.models.tenant import Tenant
 from app.db.session import get_db
 
