@@ -26,12 +26,15 @@ This gives me a place to:
 
 Many SaaS platforms need to:
 
-- Support multiple organisations
+- Support multiple organisations (Tenants)
+- Ensure strict data isolation
 - Keep data isolated per tenant
-- Share infrastructure efficiently
+- Share infrastructure efficiently and safetly
 - Scale cleanly
+- Bootstrap and manage system level users security
+- Share admin-level visibility without breaking tenant boundaries
 
-TenantCore acts as the foundation for that kind of system.
+TenantCore implements the backend foundation required to support those needs.
 
 ---
 
@@ -40,10 +43,11 @@ TenantCore acts as the foundation for that kind of system.
 - **Python**
 - **FastAPI**
 - **Uvicorn**
-- **PostgreSQL** (planned)
-- **Docker & Docker Compose** (planned)
-- **SQLAlchemy (async)** (planned)
-- **JWT authentication** (planned)
+- **PostgreSQL**
+- **SQLAlchemy (async)**
+- **Alembic**
+- **Docker & Docker Compose**
+- **JWT authentication**
 
 ---
 
@@ -55,32 +59,70 @@ v1 focuses on building a correct, production-grade backend foundation before add
 
 ### Implemented
 
+## Core Infastructure
+
 - FastAPI application structure
 - Versioned API routing (`/api/v1`)
-- Health check endpoints
-- PostgreSQL integration
-- SQLAlchemy models
-- Alembic migration setup
-- Initial database schema migration
-- Database engine lifecycle management
+- Application lifespan management
+- Database engine and session lifecycle handling
+- PostgreSQL integration (Async)
+- Alembic migrations
+- Base domain models
+
+## Multi-Tenancy
+
 - Tenant domain model
+- Tenant scoped database models via mixins
+- Strict tenant isolation enforced at the repository layer
+- Tenant resolution from authenticated user context
 
-### In progress (v1)
+## Authentication & Security
 
-- Tenant CRUD endpoints
-- Pydantic request/response schemas
-- Repository and service layers
-- Dependency injection for DB sessions
-- Basic API tests
+- JWT-based authentication
+- Password hashing (bcrypt)
+- Tken decoding & validation
+- User authentication dependency resolution
+- Role based admin checks
 
-### Planned (v2+)
+## Authentication & Security
 
-- Authentication (JWT)
-- User management
-- Multi-tenant data isolation
-- Role-based access control
-- Dockerisation
-- Deployment workflows
+- Repository pattern (tenant-scoped & admin-scoped)
+- Clear seperation between tenant level access and system/admin level access
+- Async repository base classes
+
+## Functional APIs
+
+- Project creation & listing (tenants scoped)
+- Admin-only tenants listing
+- Admin tenant health inspection
+- Health check endpoints
+
+## Admin & Bootstrpping
+
+- One-time bootstrap script for system tenants + admin user
+- Explicit seperation of bootstrap logic from runtime API
+  Guardrails around admin only functionality
+
+### Recenltly completed
+
+- Tenant resolution refactor using shared dependencies
+- Admin tenant management endpoints
+- Removal of duplicate tenant resolution logic
+- OpenAPI correctness fixes
+- Repository consolidation and reuse
+- Safe database reset and reseeding workflow
+- Bootstrap admin script execution & validation
+
+### Next Phase (v2+) - Hardening and production readiness
+
+- Endpoint-level authorization hardening
+- Explicit tenant access validation
+- Structured API error responses
+- Improved admin observability
+- Test coverage (unit + integration)
+- Docker & Docker Compose setup
+- Environment-based configuration
+- Production safety checks
 
 ---
 
