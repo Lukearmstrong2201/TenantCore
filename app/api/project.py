@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.project import ProjectCreate, ProjectRead
 from app.repositories.project import ProjectRepository
-from app.api.deps import get_current_tenant
+from app.api.deps import require_tenant
 from app.models.tenant import Tenant
 from app.db.session import get_db
 
@@ -21,7 +21,7 @@ router = APIRouter(
 )
 async def create_project(
     project_in: ProjectCreate,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -38,7 +38,7 @@ async def create_project(
     status_code=status.HTTP_200_OK,
 )
 async def list_projects(
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
     """
