@@ -99,38 +99,33 @@ async def promote_user(
 async def demote_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_admin: User = Depends(require_admin),
 ):
     """
     Demote an admin user to a regular user in the same tenant.
     Can only be performed by an admin.
     """
     # Block self-demotion
-    if current_user.id == user_id:
+    if current_admin.id == user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot demote yourself.",
         )
     
-    # Ensure the current user is an admin
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You need admin rights to perform this action.",
-        )
-    
-     # Call the demote_admin_user function with all required arguments
+    # Call the demote_admin_user function with all required arguments
     demoted_user = await demote_admin_user(
-        db, user_id, 
-        current_user.id, 
-        current_user.tenant_id)
+        db=db, 
+        user_id=user_id,
+        current_user_id=current_admin.id,
+        tenant_id=current_admin.tenant_id
+    )
     
     await create_audit_log(
-    db=db,
-    tenant_id=current_user.tenant_id,
-    actor_user_id=current_user.id,
-    target_user_id=demoted_user.id,
-    action="DEMOTE_ADMIN",
+        db=db,
+        tenant_id=current_admin.tenant_id,
+        actor_user_id=current_admin.id,
+        target_user_id=demoted_user.id,
+        action="DEMOTE_ADMIN",
 )
     return demoted_user
 
