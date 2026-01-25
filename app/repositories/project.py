@@ -1,18 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.models.project import Project
 from app.models.tenant import Tenant
+from app.repositories.base import TenantScopedRepository
 
-class ProjectRepository:
+class ProjectRepository(TenantScopedRepository[Project]):
     def __init__(
         self,
         *,
         db: AsyncSession,
         tenant: Tenant,
     ):
-        self.db = db
-        self.tenant = tenant
+        super().__init__(
+            db=db,
+            tenant=tenant,
+            model=Project,
+        )
 
     async def create(self, *, name: str) -> Project:
         """
@@ -28,14 +31,3 @@ class ProjectRepository:
         await self.db.refresh(project)
 
         return project
-
-    async def list_all(self) -> list[Project]:
-        """
-        Return all projects belonging to the current tenant.
-        """
-        result = await self.db.execute(
-            select(Project).where(
-                Project.tenant_id == self.tenant.id
-            )
-        )
-        return result.scalars().all()
