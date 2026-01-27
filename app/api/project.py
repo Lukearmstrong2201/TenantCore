@@ -5,6 +5,8 @@ from app.schemas.project import ProjectCreate, ProjectRead
 from app.repositories.project import ProjectRepository
 from app.api.deps import require_tenant
 from app.api.deps.auth import get_current_user
+from app.api.deps.project import require_project_access
+from app.models.project_membership import ProjectRole
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.db.session import get_db
@@ -46,10 +48,49 @@ async def create_project(
 )
 async def list_projects(
     tenant: Tenant = Depends(require_tenant),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     List all projects for the current tenant.
     """
-    repo = ProjectRepository(db=db, tenant=tenant)
-    return await repo.list_all()
+    repo = ProjectRepository(
+        db=db, 
+        tenant=tenant, 
+        user=current_user,
+    )
+    return await repo.list_for_user()
+
+
+@router.get(
+    "/{project_id}",
+    response_model=ProjectRead,
+)
+async def get_project(
+    project=Depends(
+        require_project_access(
+            allowed_roles={
+                ProjectRole.OWNER,
+                ProjectRole.ADMIN,
+                ProjectRole.MEMBER,
+                ProjectRole.VIEWER,
+            }
+        )
+    ),
+):
+    return project
+
+
+@router.delete(
+    "/{project_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_project(
+    project=Depends(
+        require_project_access(
+            allowed_roles={ProjectRole.OWNER}
+        )
+    ),
+):
+    # deletion logic coming later
+    pass

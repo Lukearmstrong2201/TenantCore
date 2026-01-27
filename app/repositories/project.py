@@ -48,19 +48,26 @@ class ProjectRepository(TenantScopedRepository[Project]):
 
         return project
     
-
-async def list_for_user(self):
-    """
-    List projects where the current user is a member.
-    """
-    stmt = (
-        select(Project)
-        .join(ProjectMembership, ProjectMembership.project_id == Project.id)
-        .where(
-            ProjectMembership.user_id == self.user.id,
-            ProjectMembership.tenant_id == self.tenant.id,
+    async def list_for_user(self):
+        """
+        List projects where the current user is a member.
+        """
+        stmt = (
+            select(Project)
+            .join(ProjectMembership, ProjectMembership.project_id == Project.id)
+            .where(
+                ProjectMembership.user_id == self.user.id,
+                ProjectMembership.tenant_id == self.tenant.id,
+            )
         )
-    )
 
-    result = await self.db.execute(stmt)
-    return result.scalars().all()
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+    
+
+    
+
+    
+    
+
+
