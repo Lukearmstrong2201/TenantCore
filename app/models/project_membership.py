@@ -5,6 +5,12 @@ from app.db.base_class import Base
 from app.models.mixins import TenantScopedMixin
 
 
+class ProjectRole(str, enum.Enum):
+    OWNER = "OWNER"
+    ADMIN = "ADMIN"
+    MEMBER = "MEMBER"
+    VIEWER = "VIEWER"
+
 class ProjectMembership(TenantScopedMixin, Base):
     __tablename__ = "project_memberships"
 
@@ -23,15 +29,9 @@ class ProjectMembership(TenantScopedMixin, Base):
     )
 
     role = Column(
-        Enum(
-            "OWNER",
-            "ADMIN",
-            "MEMBER",
-            "VIEWER",
-            name="project_role",
-        ),
+        Enum(ProjectRole, name="project_role"),
         nullable=False,
-        default="MEMBER",
+        default=ProjectRole.MEMBER,
     )
 
     __table_args__ = (

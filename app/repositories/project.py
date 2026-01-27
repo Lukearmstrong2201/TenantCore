@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.models.user import User
 from app.models.project import Project
 from app.models.tenant import Tenant
 from app.repositories.base import TenantScopedRepository
-from app.models.project_membership import ProjectMembership
+from app.models.project_membership import ProjectMembership, ProjectRole
 
 
 class ProjectRepository(TenantScopedRepository[Project]):
@@ -38,7 +39,7 @@ class ProjectRepository(TenantScopedRepository[Project]):
         tenant_id=self.tenant.id,
         project_id=project.id,
         user_id=self.user.id,
-        role="OWNER",
+        role=ProjectRole.OWNER,
     )
 
         self.db.add(membership)
@@ -46,3 +47,20 @@ class ProjectRepository(TenantScopedRepository[Project]):
         await self.db.refresh(project)
 
         return project
+    
+
+async def list_for_user(self):
+    """
+    List projects where the current user is a member.
+    """
+    stmt = (
+        select(Project)
+        .join(ProjectMembership, ProjectMembership.project_id == Project.id)
+        .where(
+            ProjectMembership.user_id == self.user.id,
+            ProjectMembership.tenant_id == self.tenant.id,
+        )
+    )
+
+    result = await self.db.execute(stmt)
+    return result.scalars().all()
