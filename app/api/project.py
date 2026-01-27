@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.project import ProjectCreate, ProjectRead
 from app.repositories.project import ProjectRepository
 from app.api.deps import require_tenant
+from app.api.deps.auth import get_current_user
+from app.models.user import User
 from app.models.tenant import Tenant
 from app.db.session import get_db
 
@@ -22,12 +24,17 @@ router = APIRouter(
 async def create_project(
     project_in: ProjectCreate,
     tenant: Tenant = Depends(require_tenant),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Create a project for the current tenant.
     """
-    repo = ProjectRepository(db=db, tenant=tenant)
+    repo = ProjectRepository(
+        db=db,
+        tenant=tenant,
+        user=current_user,
+    )
     return await repo.create(name=project_in.name)
     
 
