@@ -5,6 +5,8 @@ from app.api.deps.auth import get_current_user
 from app.db.session import get_db
 from app.models.user import User
 from app.models.tenant import Tenant
+from app.repositories.tenant import get_tenant_by_id
+
 
 
 async def get_current_tenant(
@@ -20,7 +22,11 @@ async def get_current_tenant(
             detail="User is not associated with a tenant",
         )
 
-    tenant = await db.get(Tenant, current_user.tenant_id)
+    tenant = await get_tenant_by_id(
+        db=db,
+        tenant_id=current_user.tenant_id,
+    )
+
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

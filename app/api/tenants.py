@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from typing import List
 
+from app.repositories.tenant import get_tenant_by_id
 from app.schemas.tenant import TenantCreate, TenantRead
 from app.api.deps import get_current_tenant
 from app.models.tenant import Tenant

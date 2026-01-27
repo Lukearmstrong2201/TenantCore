@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin
+from app.api.deps import require_admin, require_tenant
 from app.db.session import get_db
 from app.repositories.admin.user import AdminUserRepository
 from app.schemas.user import UserRead
 from app.models.user import User
+from app.models.tenant import Tenant
 
 
 router = APIRouter(
@@ -21,9 +22,10 @@ router = APIRouter(
 )
 async def list_users(
     _: User = Depends(require_admin),
+    tenant: Tenant = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
-    repo = AdminUserRepository(db=db)
+    repo = AdminUserRepository(db=db, tenant=tenant)
     return await repo.list_all()
 
 
@@ -35,9 +37,10 @@ async def list_users(
 async def get_user(
     user_id: int,
     _: User = Depends(require_admin),
+    tenant: Tenant = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
-    repo = AdminUserRepository(db=db)
+    repo = AdminUserRepository(db=db, tenant=tenant)
     user = await repo.get_by_id(user_id)
 
     if not user:
