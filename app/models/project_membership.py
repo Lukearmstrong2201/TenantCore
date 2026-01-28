@@ -1,11 +1,13 @@
 from sqlalchemy import Column, Integer, Enum, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy import Enum as SAEnum
+from enum import Enum
 
 from app.db.base_class import Base
 from app.models.mixins import TenantScopedMixin
 
 
-class ProjectRole(str, enum.Enum):
+class ProjectRole(str, Enum):
     OWNER = "OWNER"
     ADMIN = "ADMIN"
     MEMBER = "MEMBER"
@@ -29,7 +31,7 @@ class ProjectMembership(TenantScopedMixin, Base):
     )
 
     role = Column(
-        Enum(ProjectRole, name="project_role"),
+        SAEnum(ProjectRole, name="project_role"),
         nullable=False,
         default=ProjectRole.MEMBER,
     )
