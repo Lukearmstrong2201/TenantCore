@@ -9,3 +9,15 @@ class ProjectMemberAdd(BaseModel):
 
 class ProjectMemberUpdate(BaseModel):
     role: ProjectRole
+
+
+class ProjectMemberRead(BaseModel):
+    user_id: int
+    role: ProjectRole
+
+    class Config:
+        from_attributes = True
+
+
+
+

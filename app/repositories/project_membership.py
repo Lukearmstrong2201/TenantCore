@@ -90,3 +90,27 @@ class ProjectMembershipRepository:
         )
 
         return (await self.db.execute(stmt)).scalar_one()
+    
+
+    async def list_members(
+        self,
+        *,
+        project_id: int,
+    ):
+        stmt = (
+            select(ProjectMembership)
+            .where(
+                ProjectMembership.project_id == project_id,
+                ProjectMembership.tenant_id == self.tenant.id,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    
+
+    
+
+
+
