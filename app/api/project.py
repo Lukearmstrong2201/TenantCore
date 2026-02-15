@@ -2,15 +2,19 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.project import ProjectCreate, ProjectRead
+from app.schemas.project_membership import ProjectMemberAdd, ProjectMemberUpdate
+
 from app.repositories.project import ProjectRepository
+from app.repositories.project_membership import ProjectMembershipRepository
+
 from app.api.deps import require_tenant
 from app.api.deps.auth import get_current_user
 from app.api.deps.project import require_project_access
-from app.schemas.project_membership import ProjectMemberAdd, ProjectMemberUpdate
-from app.repositories.project_membership import ProjectMembershipRepository
+
 from app.models.project_membership import ProjectRole
 from app.models.user import User
 from app.models.tenant import Tenant
+
 from app.db.session import get_db
 
 
@@ -40,7 +44,6 @@ async def create_project(
         user=current_user,
     )
     return await repo.create(name=project_in.name)
-    
 
 
 @router.get(
@@ -54,11 +57,11 @@ async def list_projects(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    List all projects for the current tenant.
+    List all projects the current user has access to.
     """
     repo = ProjectRepository(
-        db=db, 
-        tenant=tenant, 
+        db=db,
+        tenant=tenant,
         user=current_user,
     )
     return await repo.list_for_user()
@@ -86,6 +89,7 @@ async def get_project(
 @router.delete(
     "/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def delete_project(
     project=Depends(
@@ -94,7 +98,7 @@ async def delete_project(
         )
     ),
 ):
-    # deletion logic coming later
+    # Deletion logic will come later
     pass
 
 
@@ -114,7 +118,7 @@ async def add_project_member(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Add member to project.
+    Add a member to a project.
     """
     repo = ProjectMembershipRepository(
         db=db,
@@ -129,10 +133,10 @@ async def add_project_member(
     )
 
 
-
 @router.patch(
     "/{project_id}/members/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def update_project_member(
     user_id: int,
@@ -147,7 +151,7 @@ async def update_project_member(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Update member role.
+    Update a project member's role.
     """
     repo = ProjectMembershipRepository(
         db=db,
@@ -165,6 +169,7 @@ async def update_project_member(
 @router.delete(
     "/{project_id}/members/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def remove_project_member(
     user_id: int,
