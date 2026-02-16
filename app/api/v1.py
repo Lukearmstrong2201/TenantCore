@@ -8,6 +8,7 @@ from app.api.admin_tenants import router as admin_tenants_router
 from app.api.admin.users import router as admin_users_router
 from app.api.admin.tenants import router as admin_tenant_router
 from app.api.admin.tenant_create import router as admin_tenant_create_router
+from app.api.tasks import router as tasks
 
 
 
@@ -22,6 +23,7 @@ router.include_router(admin_tenants_router)
 router.include_router(admin_users_router)
 router.include_router(admin_tenant_router)
 router.include_router(admin_tenant_create_router)
+router.include_router(tasks)
 
 
 

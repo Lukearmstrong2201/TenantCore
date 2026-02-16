@@ -21,3 +21,15 @@ class Project(TenantScopedMixin, Base):
         back_populates="projects",
     )
 
+    memberships = relationship(
+        "ProjectMembership",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+
+    tasks = relationship(
+        "Task",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+
