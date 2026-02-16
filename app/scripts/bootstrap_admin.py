@@ -17,7 +17,7 @@ ADMIN_PASSWORD = "ChangeMe123!"  # CHANGE IMMEDIATELY
 
 async def bootstrap() -> None:
     # Safety — NEVER allow accidental prod execution
-    if not settings.ALLOW_BOOTSTRAP:
+    if not settings.allow_bootstrap:
         raise RuntimeError(
             "Bootstrap disabled. Set ALLOW_BOOTSTRAP=true to run this script."
         )
