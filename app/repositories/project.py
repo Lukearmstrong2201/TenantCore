@@ -1,6 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.crud.audit_log import create_audit_log
+
+from app.models.audit_action import AuditAction
 from app.models.user import User
 from app.models.project import Project
 from app.models.tenant import Tenant
@@ -36,13 +39,22 @@ class ProjectRepository(TenantScopedRepository[Project]):
         await self.db.flush()
 
         membership = ProjectMembership(
-        tenant_id=self.tenant.id,
-        project_id=project.id,
-        user_id=self.user.id,
-        role=ProjectRole.OWNER,
-    )
+            tenant_id=self.tenant.id,
+            project_id=project.id,
+            user_id=self.user.id,
+            role=ProjectRole.OWNER,
+        )
 
         self.db.add(membership)
+
+        await create_audit_log(
+            db=self.db,
+            tenant_id=self.tenant.id,
+            actor_user_id=self.user.id,
+            target_user_id=None,
+            action=AuditAction.PROJECT_CREATED,
+        )
+
         await self.db.commit()
         await self.db.refresh(project)
 
