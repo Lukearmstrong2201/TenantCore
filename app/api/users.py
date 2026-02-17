@@ -10,6 +10,8 @@ from app.crud.user import promote_user_to_admin
 from app.crud.user import demote_admin_user
 from app.crud.user import reactivate_user, deactivate_user
 from app.crud.audit_log import create_audit_log
+
+from app.models.audit_action import AuditAction
 from app.models.user import User
 from app.schemas.user import UserRead, UserCreate
 
@@ -89,7 +91,7 @@ async def promote_user(
     tenant_id=current_admin.tenant_id,
     actor_user_id=current_admin.id,
     target_user_id=promoted_user.id,
-    action="PROMOTE_ADMIN",
+    action=AuditAction.PROMOTE_ADMIN,
 )
 
     return promoted_user
@@ -125,7 +127,7 @@ async def demote_user(
         tenant_id=current_admin.tenant_id,
         actor_user_id=current_admin.id,
         target_user_id=demoted_user.id,
-        action="DEMOTE_ADMIN",
+        action=AuditAction.DEMOTE_ADMIN,
 )
     return demoted_user
 
