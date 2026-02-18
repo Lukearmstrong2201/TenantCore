@@ -2,8 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps.project import require_project_access
+from app.api.deps.auth import get_current_user
+from app.api.deps.tenant import get_current_tenant
 from app.db.session import get_db
+
+from app.models.user import User
+from app.models.tenant import Tenant
 from app.models.project_membership import ProjectRole
+
 from app.repositories.task import TaskRepository
 from app.schemas.task import TaskCreate, TaskRead
 
@@ -27,8 +33,14 @@ async def create_task(
         )
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(db)
+    repo = TaskRepository(
+        db=db,
+        tenant=current_tenant,
+        user=current_user,
+    )
     return await repo.create(
         project_id=project.id,
         title=payload.title,
@@ -49,8 +61,15 @@ async def list_tasks(
         )
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(db)
+    repo = TaskRepository(
+        db=db,
+        tenant=current_tenant,
+        user=current_user,
+    )
+
     return await repo.list(project_id=project.id)
 
 
@@ -68,9 +87,16 @@ async def get_task(
         )
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(db)
-    task = await repo.get(project.id, task_id)
+    repo = TaskRepository(
+        db=db,
+        tenant=current_tenant,
+        user=current_user,
+    )
+
+    task = await repo.get(project_id=project.id, task_id=task_id)
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -90,14 +116,21 @@ async def delete_task(
         )
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(db)
-    task = await repo.get(project.id, task_id)
+    repo = TaskRepository(
+        db=db,
+        tenant=current_tenant,
+        user=current_user,
+    )
+
+    task = await repo.get(project_id=project.id, task_id=task_id)
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    await repo.delete(task)
+    await repo.delete(task=task)
 
 
 
