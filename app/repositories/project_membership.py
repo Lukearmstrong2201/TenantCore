@@ -1,6 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
+from app.crud.audit_log import create_audit_log
+
+from app.models.audit_action import AuditAction
 from app.models.project_membership import ProjectMembership, ProjectRole
 from app.models.user import User
 from app.models.tenant import Tenant
@@ -33,6 +36,15 @@ class ProjectMembershipRepository:
         )
 
         self.db.add(membership)
+
+        await create_audit_log(
+            db=self.db,
+            tenant_id=self.tenant.id,
+            actor_user_id=self.actor.id,
+            target_user_id=user_id,
+            action=AuditAction.PROJECT_MEMBER_ADDED,
+        )
+
         await self.db.commit()
         await self.db.refresh(membership)
 
@@ -57,6 +69,15 @@ class ProjectMembershipRepository:
         membership = (await self.db.execute(stmt)).scalar_one()
 
         membership.role = role
+
+        await create_audit_log(
+            db=self.db,
+            tenant_id=self.tenant.id,
+            actor_user_id=self.actor.id,
+            target_user_id=user_id,
+            action=AuditAction.PROJECT_ROLE_UPDATED,
+        )
+
         await self.db.commit()
 
     async def remove_member(
@@ -76,6 +97,15 @@ class ProjectMembershipRepository:
 
         membership = (await self.db.execute(stmt)).scalar_one()
         await self.db.delete(membership)
+
+        await create_audit_log(
+            db=self.db,
+            tenant_id=self.tenant.id,
+            actor_user_id=self.actor.id,
+            target_user_id=user_id,
+            action=AuditAction.PROJECT_MEMBER_REMOVED,
+        )
+
         await self.db.commit()
 
     async def owner_count(self, project_id: int) -> int:
