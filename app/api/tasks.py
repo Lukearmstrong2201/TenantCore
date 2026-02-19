@@ -36,16 +36,21 @@ async def create_task(
     current_user: User = Depends(get_current_user),
     current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(
-        db=db,
-        tenant=current_tenant,
-        user=current_user,
-    )
-    return await repo.create(
-        project_id=project.id,
-        title=payload.title,
-        description=payload.description,
-    )
+    repo = TaskRepository(db=db, tenant=current_tenant, user=current_user)
+
+    try:
+        task = await repo.create(
+            project_id=project.id,
+            title=payload.title,
+            description=payload.description,
+        )
+        await db.commit()
+        await db.refresh(task)
+        return task
+    except Exception:
+        await db.rollback()
+        raise
+
 
 
 @router.get("", response_model=list[TaskRead])
@@ -119,18 +124,19 @@ async def delete_task(
     current_user: User = Depends(get_current_user),
     current_tenant: Tenant = Depends(get_current_tenant),
 ):
-    repo = TaskRepository(
-        db=db,
-        tenant=current_tenant,
-        user=current_user,
-    )
+    repo = TaskRepository(db=db, tenant=current_tenant, user=current_user)
 
     task = await repo.get(project_id=project.id, task_id=task_id)
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    await repo.delete(task=task)
+    try:
+        await repo.delete(task=task)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 

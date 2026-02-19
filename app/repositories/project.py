@@ -36,6 +36,8 @@ class ProjectRepository(TenantScopedRepository[Project]):
         )
 
         self.db.add(project)
+
+        # Needed so project.id is available for membership
         await self.db.flush()
 
         membership = ProjectMembership(
@@ -55,11 +57,8 @@ class ProjectRepository(TenantScopedRepository[Project]):
             action=AuditAction.PROJECT_CREATED,
         )
 
-        await self.db.commit()
-        await self.db.refresh(project)
-
         return project
-    
+
     async def list_for_user(self):
         """
         List projects where the current user is a member.
@@ -75,11 +74,3 @@ class ProjectRepository(TenantScopedRepository[Project]):
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
-    
-
-    
-
-    
-    
-
-

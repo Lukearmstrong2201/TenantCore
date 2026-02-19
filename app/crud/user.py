@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select,func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
 from app.models.user import User
@@ -38,22 +37,10 @@ async def create_user(
         is_active=user_in.is_active,
         is_admin=False,
         hashed_password=hash_password(user_in.password),
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
 
     db.add(db_user)
-
-    try:
-        await db.commit()
-    except IntegrityError:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
-        )
-    
-    
-    await db.refresh(db_user)
     return db_user
 
 
@@ -73,9 +60,6 @@ async def promote_user_to_admin(
     user_id: int,
     tenant_id: int,
 ) -> User:
-    """
-    Promote a user to admin within the same tenant.
-    """
     result = await db.execute(
         select(User).where(
             User.id == user_id,
@@ -94,9 +78,6 @@ async def promote_user_to_admin(
         return user
 
     user.is_admin = True
-    await db.commit()
-    await db.refresh(user)
-
     return user
 
 
@@ -106,14 +87,12 @@ async def demote_admin_user(
     current_user_id: int,
     tenant_id: int,
 ) -> User:
-    # Block self-demotion
     if user_id == current_user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot demote yourself.",
         )
 
-    # Block last-admin demotion
     admin_count = await count_admins_in_tenant(db, tenant_id)
     if admin_count <= 1:
         raise HTTPException(
@@ -122,21 +101,19 @@ async def demote_admin_user(
         )
 
     user = await get_user_by_id(db, user_id)
-    if not user:
+    if not user or user.tenant_id != tenant_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found.",
         )
 
-    if user.is_admin == False:
+    if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User is already not an admin.",
         )
 
     user.is_admin = False
-    await db.commit()
-    await db.refresh(user)
     return user
 
 
@@ -180,7 +157,6 @@ async def deactivate_user(
             detail="User is already inactive.",
         )
 
-    # Prevent last-admin lockout
     if user.is_admin:
         admin_count = await count_admins_in_tenant(db, tenant_id)
         if admin_count <= 1:
@@ -190,8 +166,6 @@ async def deactivate_user(
             )
 
     user.is_active = False
-    await db.commit()
-    await db.refresh(user)
     return user
 
 
@@ -214,7 +188,4 @@ async def reactivate_user(
         )
 
     user.is_active = True
-    await db.commit()
-    await db.refresh(user)
     return user
-

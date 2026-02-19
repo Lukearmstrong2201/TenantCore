@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps.auth import get_current_user
 from app.api.deps.tenant import get_current_tenant
+from app.api.deps.admin import get_current_admin_user
+
 from app.db.session import get_db
 
 from app.models.user import User
@@ -22,7 +24,7 @@ async def get_audit_logs(
     limit: int = Query(50, le=100),
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin_user),
     current_tenant: Tenant = Depends(get_current_tenant),
 ):
     # Restrict to tenant admins only

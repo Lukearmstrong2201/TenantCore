@@ -45,9 +45,6 @@ class ProjectMembershipRepository:
             action=AuditAction.PROJECT_MEMBER_ADDED,
         )
 
-        await self.db.commit()
-        await self.db.refresh(membership)
-
         return membership
 
     async def update_role(
@@ -56,7 +53,7 @@ class ProjectMembershipRepository:
         project_id: int,
         user_id: int,
         role: ProjectRole,
-    ) -> None:
+    ) -> ProjectMembership:
         stmt = (
             select(ProjectMembership)
             .where(
@@ -78,7 +75,7 @@ class ProjectMembershipRepository:
             action=AuditAction.PROJECT_ROLE_UPDATED,
         )
 
-        await self.db.commit()
+        return membership
 
     async def remove_member(
         self,
@@ -96,6 +93,7 @@ class ProjectMembershipRepository:
         )
 
         membership = (await self.db.execute(stmt)).scalar_one()
+
         await self.db.delete(membership)
 
         await create_audit_log(
@@ -105,8 +103,6 @@ class ProjectMembershipRepository:
             target_user_id=user_id,
             action=AuditAction.PROJECT_MEMBER_REMOVED,
         )
-
-        await self.db.commit()
 
     async def owner_count(self, project_id: int) -> int:
         stmt = (
@@ -120,7 +116,6 @@ class ProjectMembershipRepository:
         )
 
         return (await self.db.execute(stmt)).scalar_one()
-    
 
     async def list_members(
         self,
@@ -137,10 +132,3 @@ class ProjectMembershipRepository:
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
-
-    
-
-    
-
-
-

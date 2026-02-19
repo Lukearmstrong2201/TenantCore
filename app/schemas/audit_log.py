@@ -4,9 +4,16 @@ from pydantic import BaseModel
 from app.models.audit_action import AuditAction
 
 
+class AuditUserInfo(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True
+
 class AuditLogRead(BaseModel):
     id: int
-    actor_user_id: int
+    action: AuditAction
     target_user_id: int | None
     action: AuditAction
     detail: str | None

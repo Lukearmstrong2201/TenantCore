@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.models.audit_log import AuditLog
 
@@ -34,6 +35,10 @@ async def list_audit_logs(
     stmt = (
         select(AuditLog)
         .where(AuditLog.tenant_id == tenant_id)
+        .options(
+            selectinload(AuditLog.actor_user),
+            selectinload(AuditLog.target_user),
+        )
         .order_by(AuditLog.created_at.desc())
         .limit(limit)
         .offset(offset)

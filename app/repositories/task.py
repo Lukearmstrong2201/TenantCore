@@ -34,6 +34,8 @@ class TaskRepository:
         )
 
         self.db.add(task)
+
+        # Needed if ID is required before commit
         await self.db.flush()
 
         await create_audit_log(
@@ -43,9 +45,6 @@ class TaskRepository:
             target_user_id=None,
             action=AuditAction.TASK_CREATED,
         )
-
-        await self.db.commit()
-        await self.db.refresh(task)
 
         return task
 
@@ -75,4 +74,3 @@ class TaskRepository:
             action=AuditAction.TASK_DELETED,
         )
 
-        await self.db.commit()
