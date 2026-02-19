@@ -9,7 +9,7 @@ from app.api.admin.users import router as admin_users_router
 from app.api.admin.tenants import router as admin_tenant_router
 from app.api.admin.tenant_create import router as admin_tenant_create_router
 from app.api.tasks import router as tasks
-
+from app.api.audit_logs import router as audit_logs
 
 
 router = APIRouter(prefix="/api/v1")
@@ -24,6 +24,8 @@ router.include_router(admin_users_router)
 router.include_router(admin_tenant_router)
 router.include_router(admin_tenant_create_router)
 router.include_router(tasks)
+router.include_router(audit_logs)
+
 
 
 

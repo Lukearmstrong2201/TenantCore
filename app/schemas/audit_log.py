@@ -9,6 +9,7 @@ class AuditLogRead(BaseModel):
     actor_user_id: int
     target_user_id: int | None
     action: AuditAction
+    detail: str | None
     created_at: datetime
 
     class Config:
