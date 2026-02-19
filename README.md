@@ -1,128 +1,164 @@
 # TenantCore
 
-TenantCore is a backend API project built to explore how modern, multi-tenant SaaS systems are designed and deployed.
+TenantCore is a production-oriented, multi-tenant SaaS backend built with FastAPI and PostgreSQL.
 
-The goal of this project is not to build a full product, but to deeply understand real-world backend concepts such as containerisation, authentication, database design, and tenant isolation — the kind of problems you actually run into when building production systems.
+It demonstrates how to design a scalable backend architecture that supports multiple organisations (tenants) from a single API while maintaining strict data isolation, transactional integrity, and role-based access control.
 
-This project is being built incrementally, focusing on correctness, structure, and learning rather than speed.
-
----
-
-## Why this project exists
-
-A lot of tutorials focus on small, isolated examples. TenantCore is different — it is meant to simulate the **core backend of a SaaS platform** that supports multiple organisations (tenants) from a single API.
-
-This gives me a place to:
-
-- Learn Docker properly (not just copy/paste)
-- Understand how multi-tenancy works in practice
-- Build a clean FastAPI project structure
-- Practice authentication, database migrations, and deployment
-- Create a portfolio project that reflects real backend work
+This project focuses on clean architecture, layered design, and production-safe patterns rather than rapid feature delivery.
 
 ---
 
-## What problem does it solve?
+# Overview
 
-Many SaaS platforms need to:
+Modern SaaS platforms must support:
 
-- Support multiple organisations (Tenants)
-- Ensure strict data isolation
-- Keep data isolated per tenant
-- Share infrastructure efficiently and safetly
-- Scale cleanly
-- Bootstrap and manage system level users security
-- Share admin-level visibility without breaking tenant boundaries
+- Multiple organisations (tenants)
+- Strict tenant data isolation
+- Role-based access control
+- Audit logging
+- Admin-level system visibility
+- Transactional consistency
 
-TenantCore implements the backend foundation required to support those needs.
-
----
-
-## Tech Stack
-
-- **Python**
-- **FastAPI**
-- **Uvicorn**
-- **PostgreSQL**
-- **SQLAlchemy (async)**
-- **Alembic**
-- **Docker & Docker Compose**
-- **JWT authentication**
+TenantCore implements the backend foundation required to support these needs using real-world architectural patterns.
 
 ---
 
-## Project status
+# Architecture
 
-### Current phase: **v1 — Foundation**
+TenantCore follows a layered architecture:
 
-v1 focuses on building a correct, production-grade backend foundation before adding higher-level features.
+API Layer  
+→ Handles HTTP concerns, validation, and transaction boundaries
 
-### Implemented
+Service Layer  
+→ Contains business rules and domain logic
 
-## Core Infastructure
+Repository Layer  
+→ Handles persistence and tenant-scoped queries
 
-- FastAPI application structure
-- Versioned API routing (`/api/v1`)
-- Application lifespan management
-- Database engine and session lifecycle handling
-- PostgreSQL integration (Async)
-- Alembic migrations
-- Base domain models
+Database  
+→ PostgreSQL with async SQLAlchemy
 
-## Multi-Tenancy
+## Key Architectural Decisions
 
-- Tenant domain model
-- Tenant scoped database models via mixins
-- Strict tenant isolation enforced at the repository layer
-- Tenant resolution from authenticated user context
+- API-owned transaction management (commit/rollback only in API layer)
+- Strict tenant isolation enforced at the repository level
+- Role-based project membership enforcement
+- Audit logs participate in the same database transaction
+- Clear separation between system-admin and tenant-scoped logic
+- Async database operations for scalability
+
+This structure mirrors how production SaaS backends are built.
+
+---
+
+# Multi-Tenancy Model
+
+TenantCore enforces isolation using:
+
+- `tenant_id` on all tenant-scoped models
+- Repository-level filtering by tenant
+- Authenticated user → tenant resolution dependency
+- Guardrails preventing cross-tenant data access
+
+No request can access data outside its assigned tenant.
+
+---
+
+# Access Control
+
+Project-level role-based access control is implemented.
+
+Roles:
+
+- OWNER
+- MEMBER
+
+Business rules enforced:
+
+- Only project owners can manage members
+- A project must always have at least one OWNER
+- Cross-tenant access is blocked
+- Admin-level routes are explicitly separated from tenant routes
+
+---
+
+# Audit Logging
+
+All membership mutations create audit logs.
+
+Audit logs:
+
+- Are tenant-scoped
+- Track actor and target user
+- Are written inside the same transaction as the action
+- Roll back automatically if the main operation fails
+
+This ensures atomicity and consistency.
+
+---
+
+# Tech Stack
+
+- Python
+- FastAPI
+- SQLAlchemy (Async)
+- PostgreSQL
+- Alembic
+- JWT Authentication
+- bcrypt password hashing
+- Docker & Docker Compose
+
+---
+
+# Core Features
+
+## Multi-Tenant Foundation
+
+- Tenant creation (admin-only)
+- Tenant-scoped models
+- Tenant resolution dependency
+- Strict data isolation enforcement
 
 ## Authentication & Security
 
 - JWT-based authentication
 - Password hashing (bcrypt)
-- Tken decoding & validation
-- User authentication dependency resolution
-- Role based admin checks
+- Role-based admin access
+- Dependency-injected current user resolution
 
-## Authentication & Security
+## Projects & Membership
 
-- Repository pattern (tenant-scoped & admin-scoped)
-- Clear seperation between tenant level access and system/admin level access
-- Async repository base classes
+- Tenant-scoped project creation
+- Project-level membership management
+- Owner-only member management
+- Protection against removing the last owner
 
-## Functional APIs
+## Audit System
 
-- Project creation & listing (tenants scoped)
-- Admin-only tenants listing
-- Admin tenant health inspection
-- Health check endpoints
+- Mutation logging for project membership
+- Actor + target tracking
+- Transactionally consistent logging
 
-## Admin & Bootstrpping
+## Infrastructure
 
-- One-time bootstrap script for system tenants + admin user
-- Explicit seperation of bootstrap logic from runtime API
-  Guardrails around admin only functionality
+- Async PostgreSQL integration
+- Alembic migrations
+- Versioned API routing (`/api/v1`)
+- Health endpoint (`/api/v1/health`)
+- Clean layered structure
 
-### Recenltly completed
+---
 
-- Tenant resolution refactor using shared dependencies
-- Admin tenant management endpoints
-- Removal of duplicate tenant resolution logic
-- OpenAPI correctness fixes
-- Repository consolidation and reuse
-- Safe database reset and reseeding workflow
-- Bootstrap admin script execution & validation
+# Testing
 
-### Next Phase (v2+) - Hardening and production readiness
+Focused integration tests validate:
 
-- Endpoint-level authorization hardening
-- Explicit tenant access validation
-- Structured API error responses
-- Improved admin observability
-- Test coverage (unit + integration)
-- Docker & Docker Compose setup
-- Environment-based configuration
-- Production safety checks
+- Tenant isolation enforcement
+- Project membership permissions
+- Prevention of last-owner removal
+- Admin-only route protection
+- Audit log creation
 
 ---
 
