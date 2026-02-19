@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models.tenant import Tenant
 from app.schemas.tenant import TenantCreate
+
 
 async def create_tenant(
     *,
@@ -18,14 +18,8 @@ async def create_tenant(
     )
 
     db.add(tenant)
+    await db.flush()  # ensures PK + constraint validation happens here
 
-    try:
-        await db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise
-
-    await db.refresh(tenant)
     return tenant
 
 
@@ -37,7 +31,6 @@ async def get_tenant_by_id(
     """
     Fetch a tenant by its primary key.
     """
-    
     result = await db.execute(
         select(Tenant).where(Tenant.id == tenant_id)
     )
@@ -52,7 +45,6 @@ async def get_tenant_by_name(
     """
     Fetch a tenant by its unique name.
     """
-    
     result = await db.execute(
         select(Tenant).where(Tenant.name == name)
     )
@@ -69,4 +61,4 @@ async def list_tenants(
     result = await db.execute(
         select(Tenant).order_by(Tenant.name)
     )
-    return result.scalar().all()
+    return result.scalars().all()

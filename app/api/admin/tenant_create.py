@@ -24,4 +24,11 @@ async def admin_create_tenant(
     _: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    return await create_tenant(db=db, tenant_in=tenant_in)
+    try:
+        tenant = await create_tenant(db=db, tenant_in=tenant_in)
+        await db.commit()
+        await db.refresh(tenant)
+        return tenant
+    except Exception:
+        await db.rollback()
+        raise
